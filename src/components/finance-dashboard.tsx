@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { createTransaction } from "@/api/transactions";
+
 type Row = {
   id: string;
   date: string;
@@ -41,6 +43,8 @@ export default function FinanceDashboard({ initialRows, goals }: FinanceDashboar
     goalId: "",
   });
   const [csvText, setCsvText] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const goalsMap = useMemo(() => new Map(goals.map((s) => [s.id, s])), [goals]);
 
@@ -69,37 +73,53 @@ export default function FinanceDashboard({ initialRows, goals }: FinanceDashboar
     return [...grouped.entries()].sort((a, b) => b[1] - a[1]);
   }, [rows]);
 
-  function addRow() {
+  async function addRow() {
     if (!newRow.date || !newRow.category || newRow.amount <= 0) {
+      setSubmitError("Date, category, and amount are required.");
       return;
     }
 
     if (newRow.type === "save" && !newRow.goalId) {
+      setSubmitError("Please select a goal for save transactions.");
       return;
     }
 
-    const goalName = newRow.type === "save" ? goalsMap.get(newRow.goalId)?.name ?? "Goal" : "";
+    setSubmitError("");
+    setIsSaving(true);
 
-    setRows((prev) => [
-      {
-        id: crypto.randomUUID(),
+    try {
+      const created = await createTransaction({
         date: newRow.date,
-        category: newRow.type === "save" ? `Save: ${goalName}` : newRow.category,
+        category: newRow.category,
         note: newRow.note,
         amount: newRow.amount,
         type: newRow.type,
-      },
-      ...prev,
-    ]);
+        goalId: newRow.goalId || undefined,
+      });
 
-    setNewRow({
-      date: "",
-      category: "",
-      note: "",
-      amount: 0,
-      type: "expense",
-      goalId: "",
-    });
+      const goalName = created.type === "save" ? goalsMap.get(newRow.goalId)?.name ?? "Goal" : "";
+
+      setRows((prev) => [
+        {
+          ...created,
+          category: created.type === "save" ? `Save: ${goalName}` : created.category,
+        },
+        ...prev,
+      ]);
+
+      setNewRow({
+        date: "",
+        category: "",
+        note: "",
+        amount: 0,
+        type: "expense",
+        goalId: "",
+      });
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Could not save transaction.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function importCsv() {
@@ -209,7 +229,8 @@ export default function FinanceDashboard({ initialRows, goals }: FinanceDashboar
                 ))}
               </select>
             ) : null}
-            <button onClick={addRow}>Add</button>
+            <button onClick={addRow} disabled={isSaving}>{isSaving ? "Saving..." : "Add"}</button>
+            {submitError ? <p className="form-feedback form-feedback-error">{submitError}</p> : null}
           </div>
         </article>
 
