@@ -1,6 +1,10 @@
+import { loadEnvConfig } from "@next/env";
+
 import { getDb } from "@/db/client";
 import { seedTransactions } from "@/db/seed-data";
 import { transactions } from "@/db/schema";
+
+loadEnvConfig(process.cwd());
 
 async function seed() {
   const db = getDb();
