@@ -28,3 +28,23 @@ export async function listGoalsWithProgress() {
     .groupBy(goals.id)
     .orderBy(desc(goals.createdAt));
 }
+
+type CreateGoalInput = {
+  name: string;
+  targetAmount?: number;
+  targetDate?: string;
+};
+
+export async function createGoal(input: CreateGoalInput) {
+  const db = getDb();
+  const now = new Date();
+
+  return db.insert(goals).values({
+    id: crypto.randomUUID(),
+    name: input.name,
+    targetAmount: input.targetAmount,
+    targetDate: input.targetDate,
+    createdAt: now,
+    lastUpdatedAt: now,
+  });
+}
