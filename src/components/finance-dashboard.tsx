@@ -11,21 +11,17 @@ type Row = {
   type: "income" | "expense";
 };
 
-const seedData: Row[] = [
-  { id: "1", date: "2026-02-01", category: "Salary", note: "Main paycheck", amount: 6200, type: "income" },
-  { id: "2", date: "2026-02-03", category: "Mortgage", note: "Monthly payment", amount: 1850, type: "expense" },
-  { id: "3", date: "2026-02-08", category: "Groceries", note: "Weekly shopping", amount: 182.44, type: "expense" },
-  { id: "4", date: "2026-02-14", category: "Freelance", note: "Side project", amount: 740, type: "income" },
-  { id: "5", date: "2026-02-19", category: "Utilities", note: "Electric + water", amount: 210.98, type: "expense" },
-];
+type FinanceDashboardProps = {
+  initialRows: Row[];
+};
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
 
-export default function FinanceDashboard() {
-  const [rows, setRows] = useState<Row[]>(seedData);
+export default function FinanceDashboard({ initialRows }: FinanceDashboardProps) {
+  const [rows, setRows] = useState<Row[]>(initialRows);
   const [newRow, setNewRow] = useState<Omit<Row, "id">>({
     date: "",
     category: "",
@@ -49,9 +45,11 @@ export default function FinanceDashboard() {
   const groupedExpenses = useMemo(() => {
     const grouped = new Map<string, number>();
 
-    rows.filter((r) => r.type === "expense").forEach((r) => {
-      grouped.set(r.category, (grouped.get(r.category) ?? 0) + r.amount);
-    });
+    rows
+      .filter((r) => r.type === "expense")
+      .forEach((r) => {
+        grouped.set(r.category, (grouped.get(r.category) ?? 0) + r.amount);
+      });
 
     return [...grouped.entries()].sort((a, b) => b[1] - a[1]);
   }, [rows]);
