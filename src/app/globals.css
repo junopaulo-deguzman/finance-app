@@ -28,6 +28,22 @@ h1 {
   color: #4b5563;
 }
 
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+}
+
+.link-button {
+  display: inline-block;
+  text-decoration: none;
+  background: #111827;
+  color: #fff;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+}
+
 .kpis {
   display: grid;
   gap: 1rem;
@@ -35,8 +51,13 @@ h1 {
   margin: 1.5rem 0;
 }
 
+.kpis-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .kpis article,
-.grid article {
+.grid article,
+.grid-single article {
   background: #fff;
   border-radius: 12px;
   padding: 1rem;
@@ -47,6 +68,13 @@ h1 {
   display: grid;
   gap: 1rem;
   grid-template-columns: 2fr 1fr;
+  margin-bottom: 1rem;
+}
+
+.grid-single {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
   margin-bottom: 1rem;
 }
 
@@ -95,6 +123,11 @@ td {
   font-weight: 700;
 }
 
+.saved {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
 .hint {
   margin-top: 0;
   color: #4b5563;
@@ -116,7 +149,12 @@ td {
 
 @media (max-width: 900px) {
   .kpis,
+  .kpis-four,
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
   }
 }
