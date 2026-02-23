@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type Row = {
@@ -8,11 +9,20 @@ type Row = {
   category: string;
   note: string;
   amount: number;
-  type: "income" | "expense";
+  type: "income" | "expense" | "save";
+};
+
+type SavingsPlan = {
+  id: string;
+  name: string;
+  targetAmount: number | null;
+  targetDate: string | null;
+  savedAmount: number;
 };
 
 type FinanceDashboardProps = {
   initialRows: Row[];
+  savingsPlans: SavingsPlan[];
 };
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -20,25 +30,30 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-export default function FinanceDashboard({ initialRows }: FinanceDashboardProps) {
+export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceDashboardProps) {
   const [rows, setRows] = useState<Row[]>(initialRows);
-  const [newRow, setNewRow] = useState<Omit<Row, "id">>({
+  const [newRow, setNewRow] = useState<Omit<Row, "id"> & { savingsId: string }>({
     date: "",
     category: "",
     note: "",
     amount: 0,
     type: "expense",
+    savingsId: "",
   });
   const [csvText, setCsvText] = useState("");
+
+  const savingsMap = useMemo(() => new Map(savingsPlans.map((s) => [s.id, s])), [savingsPlans]);
 
   const totals = useMemo(() => {
     const income = rows.filter((r) => r.type === "income").reduce((sum, r) => sum + r.amount, 0);
     const expenses = rows.filter((r) => r.type === "expense").reduce((sum, r) => sum + r.amount, 0);
+    const saved = rows.filter((r) => r.type === "save").reduce((sum, r) => sum + r.amount, 0);
 
     return {
       income,
       expenses,
-      balance: income - expenses,
+      saved,
+      balance: income - expenses - saved,
     };
   }, [rows]);
 
@@ -59,10 +74,20 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
       return;
     }
 
+    if (newRow.type === "save" && !newRow.savingsId) {
+      return;
+    }
+
+    const savingsName = newRow.type === "save" ? savingsMap.get(newRow.savingsId)?.name ?? "Savings" : "";
+
     setRows((prev) => [
       {
         id: crypto.randomUUID(),
-        ...newRow,
+        date: newRow.date,
+        category: newRow.type === "save" ? `Save: ${savingsName}` : newRow.category,
+        note: newRow.note,
+        amount: newRow.amount,
+        type: newRow.type,
       },
       ...prev,
     ]);
@@ -73,6 +98,7 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
       note: "",
       amount: 0,
       type: "expense",
+      savingsId: "",
     });
   }
 
@@ -86,7 +112,7 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
         const [date, category, note, amount, type] = line.split(",").map((item) => item.trim());
         const numericAmount = Number(amount);
 
-        if (!date || !category || Number.isNaN(numericAmount) || (type !== "income" && type !== "expense")) {
+        if (!date || !category || Number.isNaN(numericAmount) || (type !== "income" && type !== "expense" && type !== "save")) {
           return null;
         }
 
@@ -109,10 +135,17 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
 
   return (
     <main className="container">
-      <h1>Home Finance Tracker</h1>
-      <p className="subtitle">Replace your spreadsheet with a shared web dashboard your family can maintain together.</p>
+      <header className="topbar">
+        <div>
+          <h1>Home Finance Tracker</h1>
+          <p className="subtitle">Replace your spreadsheet with a shared web dashboard your family can maintain together.</p>
+        </div>
+        <Link className="link-button" href="/savings">
+          View Savings Plans
+        </Link>
+      </header>
 
-      <section className="kpis">
+      <section className="kpis kpis-four">
         <article>
           <h2>Total Income</h2>
           <p className="income">{currency.format(totals.income)}</p>
@@ -120,6 +153,10 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
         <article>
           <h2>Total Expenses</h2>
           <p className="expense">{currency.format(totals.expenses)}</p>
+        </article>
+        <article>
+          <h2>Total Saved</h2>
+          <p className="saved">{currency.format(totals.saved)}</p>
         </article>
         <article>
           <h2>Remaining Balance</h2>
@@ -132,7 +169,12 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
           <h3>Add Transaction</h3>
           <div className="form-grid">
             <input type="date" value={newRow.date} onChange={(e) => setNewRow((p) => ({ ...p, date: e.target.value }))} />
-            <input placeholder="Category" value={newRow.category} onChange={(e) => setNewRow((p) => ({ ...p, category: e.target.value }))} />
+            <input
+              placeholder="Category"
+              value={newRow.category}
+              disabled={newRow.type === "save"}
+              onChange={(e) => setNewRow((p) => ({ ...p, category: e.target.value }))}
+            />
             <input placeholder="Note" value={newRow.note} onChange={(e) => setNewRow((p) => ({ ...p, note: e.target.value }))} />
             <input
               type="number"
@@ -142,10 +184,31 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
               value={newRow.amount || ""}
               onChange={(e) => setNewRow((p) => ({ ...p, amount: Number(e.target.value) }))}
             />
-            <select value={newRow.type} onChange={(e) => setNewRow((p) => ({ ...p, type: e.target.value as Row["type"] }))}>
+            <select
+              value={newRow.type}
+              onChange={(e) =>
+                setNewRow((p) => ({
+                  ...p,
+                  type: e.target.value as Row["type"],
+                  category: e.target.value === "save" ? "Savings" : p.category,
+                  savingsId: e.target.value === "save" ? p.savingsId : "",
+                }))
+              }
+            >
               <option value="expense">Expense</option>
               <option value="income">Income</option>
+              <option value="save">Save</option>
             </select>
+            {newRow.type === "save" ? (
+              <select value={newRow.savingsId} onChange={(e) => setNewRow((p) => ({ ...p, savingsId: e.target.value }))}>
+                <option value="">Select savings plan</option>
+                {savingsPlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+            ) : null}
             <button onClick={addRow}>Add</button>
           </div>
         </article>
@@ -183,7 +246,7 @@ export default function FinanceDashboard({ initialRows }: FinanceDashboardProps)
                   <td>{row.category}</td>
                   <td>{row.note || "—"}</td>
                   <td>{row.type}</td>
-                  <td className={row.type === "income" ? "income" : "expense"}>{currency.format(row.amount)}</td>
+                  <td className={row.type === "income" ? "income" : row.type === "save" ? "saved" : "expense"}>{currency.format(row.amount)}</td>
                 </tr>
               ))}
             </tbody>
