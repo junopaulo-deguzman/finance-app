@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import CreateGoalForm from "@/components/create-goal-form";
 import { listGoalsWithProgress } from "@/db/queries";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -22,7 +23,9 @@ export default async function GoalsPage() {
         </Link>
       </header>
 
-      <section className="grid-single">
+      <section className="grid">
+        <CreateGoalForm />
+
         <article>
           <h3>All Goals</h3>
           <table>
