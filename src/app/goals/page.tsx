@@ -1,21 +1,21 @@
 import Link from "next/link";
 
-import { listSavingsWithProgress } from "@/db/queries";
+import { listGoalsWithProgress } from "@/db/queries";
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
 
-export default async function SavingsPage() {
-  const plans = await listSavingsWithProgress().catch(() => []);
+export default async function GoalsPage() {
+  const goals = await listGoalsWithProgress().catch(() => []);
 
   return (
     <main className="container">
       <header className="topbar">
         <div>
-          <h1>Savings Plans</h1>
-          <p className="subtitle">Track progress toward each saving plan and check targets at a glance.</p>
+          <h1>Goals</h1>
+          <p className="subtitle">Track progress toward each goal and check targets at a glance.</p>
         </div>
         <Link className="link-button" href="/">
           Back to Dashboard
@@ -24,7 +24,7 @@ export default async function SavingsPage() {
 
       <section className="grid-single">
         <article>
-          <h3>All Savings</h3>
+          <h3>All Goals</h3>
           <table>
             <thead>
               <tr>
@@ -35,17 +35,17 @@ export default async function SavingsPage() {
               </tr>
             </thead>
             <tbody>
-              {plans.length === 0 ? (
+              {goals.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>No savings plans found.</td>
+                  <td colSpan={4}>No goals found.</td>
                 </tr>
               ) : (
-                plans.map((plan) => (
-                  <tr key={plan.id}>
-                    <td>{plan.name}</td>
-                    <td className="saved">{currency.format(Number(plan.savedAmount))}</td>
-                    <td>{plan.targetAmount ? currency.format(plan.targetAmount) : "—"}</td>
-                    <td>{plan.targetDate || "—"}</td>
+                goals.map((goal) => (
+                  <tr key={goal.id}>
+                    <td>{goal.name}</td>
+                    <td className="saved">{currency.format(Number(goal.savedAmount))}</td>
+                    <td>{goal.targetAmount ? currency.format(goal.targetAmount) : "—"}</td>
+                    <td>{goal.targetDate || "—"}</td>
                   </tr>
                 ))
               )}

@@ -12,7 +12,7 @@ type Row = {
   type: "income" | "expense" | "save";
 };
 
-type SavingsPlan = {
+type Goal = {
   id: string;
   name: string;
   targetAmount: number | null;
@@ -22,7 +22,7 @@ type SavingsPlan = {
 
 type FinanceDashboardProps = {
   initialRows: Row[];
-  savingsPlans: SavingsPlan[];
+  goals: Goal[];
 };
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -30,19 +30,19 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceDashboardProps) {
+export default function FinanceDashboard({ initialRows, goals }: FinanceDashboardProps) {
   const [rows, setRows] = useState<Row[]>(initialRows);
-  const [newRow, setNewRow] = useState<Omit<Row, "id"> & { savingsId: string }>({
+  const [newRow, setNewRow] = useState<Omit<Row, "id"> & { goalId: string }>({
     date: "",
     category: "",
     note: "",
     amount: 0,
     type: "expense",
-    savingsId: "",
+    goalId: "",
   });
   const [csvText, setCsvText] = useState("");
 
-  const savingsMap = useMemo(() => new Map(savingsPlans.map((s) => [s.id, s])), [savingsPlans]);
+  const goalsMap = useMemo(() => new Map(goals.map((s) => [s.id, s])), [goals]);
 
   const totals = useMemo(() => {
     const income = rows.filter((r) => r.type === "income").reduce((sum, r) => sum + r.amount, 0);
@@ -74,17 +74,17 @@ export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceD
       return;
     }
 
-    if (newRow.type === "save" && !newRow.savingsId) {
+    if (newRow.type === "save" && !newRow.goalId) {
       return;
     }
 
-    const savingsName = newRow.type === "save" ? savingsMap.get(newRow.savingsId)?.name ?? "Savings" : "";
+    const goalName = newRow.type === "save" ? goalsMap.get(newRow.goalId)?.name ?? "Goal" : "";
 
     setRows((prev) => [
       {
         id: crypto.randomUUID(),
         date: newRow.date,
-        category: newRow.type === "save" ? `Save: ${savingsName}` : newRow.category,
+        category: newRow.type === "save" ? `Save: ${goalName}` : newRow.category,
         note: newRow.note,
         amount: newRow.amount,
         type: newRow.type,
@@ -98,7 +98,7 @@ export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceD
       note: "",
       amount: 0,
       type: "expense",
-      savingsId: "",
+      goalId: "",
     });
   }
 
@@ -140,8 +140,8 @@ export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceD
           <h1>Home Finance Tracker</h1>
           <p className="subtitle">Replace your spreadsheet with a shared web dashboard your family can maintain together.</p>
         </div>
-        <Link className="link-button" href="/savings">
-          View Savings Plans
+        <Link className="link-button" href="/goals">
+          View Goals
         </Link>
       </header>
 
@@ -190,8 +190,8 @@ export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceD
                 setNewRow((p) => ({
                   ...p,
                   type: e.target.value as Row["type"],
-                  category: e.target.value === "save" ? "Savings" : p.category,
-                  savingsId: e.target.value === "save" ? p.savingsId : "",
+                  category: e.target.value === "save" ? "Goal" : p.category,
+                  goalId: e.target.value === "save" ? p.goalId : "",
                 }))
               }
             >
@@ -200,9 +200,9 @@ export default function FinanceDashboard({ initialRows, savingsPlans }: FinanceD
               <option value="save">Save</option>
             </select>
             {newRow.type === "save" ? (
-              <select value={newRow.savingsId} onChange={(e) => setNewRow((p) => ({ ...p, savingsId: e.target.value }))}>
-                <option value="">Select savings plan</option>
-                {savingsPlans.map((plan) => (
+              <select value={newRow.goalId} onChange={(e) => setNewRow((p) => ({ ...p, goalId: e.target.value }))}>
+                <option value="">Select goal</option>
+                {goals.map((plan) => (
                   <option key={plan.id} value={plan.id}>
                     {plan.name}
                   </option>
