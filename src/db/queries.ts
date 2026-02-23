@@ -1,7 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 
 import { getDb } from "@/db/client";
-import { savings, savings_allocations, transactions } from "@/db/schema";
+import { goal_allocations, goals, transactions } from "@/db/schema";
 
 export async function listTransactions() {
   const db = getDb();
@@ -9,22 +9,22 @@ export async function listTransactions() {
   return db.select().from(transactions).orderBy(desc(transactions.date));
 }
 
-export async function listSavingsWithProgress() {
+export async function listGoalsWithProgress() {
   const db = getDb();
 
   return db
     .select({
-      id: savings.id,
-      name: savings.name,
-      targetAmount: savings.targetAmount,
-      targetDate: savings.targetDate,
-      createdAt: savings.createdAt,
-      lastUpdatedAt: savings.lastUpdatedAt,
+      id: goals.id,
+      name: goals.name,
+      targetAmount: goals.targetAmount,
+      targetDate: goals.targetDate,
+      createdAt: goals.createdAt,
+      lastUpdatedAt: goals.lastUpdatedAt,
       savedAmount: sql<number>`coalesce(sum(${transactions.amount}), 0)`,
     })
-    .from(savings)
-    .leftJoin(savings_allocations, eq(savings.id, savings_allocations.savingsId))
-    .leftJoin(transactions, eq(savings_allocations.transactionId, transactions.id))
-    .groupBy(savings.id)
-    .orderBy(desc(savings.createdAt));
+    .from(goals)
+    .leftJoin(goal_allocations, eq(goals.id, goal_allocations.goalId))
+    .leftJoin(transactions, eq(goal_allocations.transactionId, transactions.id))
+    .groupBy(goals.id)
+    .orderBy(desc(goals.createdAt));
 }

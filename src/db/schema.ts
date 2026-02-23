@@ -10,7 +10,7 @@ export const transactions = sqliteTable("transactions", {
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 });
 
-export const savings = sqliteTable("savings", {
+export const goals = sqliteTable("goals", {
   id: text("id").primaryKey(),
   name: text("name").notNull().default(""),
   targetAmount: real("target_amount"),
@@ -19,9 +19,9 @@ export const savings = sqliteTable("savings", {
   lastUpdatedAt: integer("last_updated_at", { mode: "timestamp_ms" }).notNull(),
 });
 
-export const savings_allocations = sqliteTable("savings_allocations", {
+export const goal_allocations = sqliteTable("goal_allocations", {
   id: text("id").primaryKey(),
-  savingsId: text("savingsId").references(() => savings.id),
+  goalId: text("goalId").references(() => goals.id),
   transactionId: text("transactionId").references(() => transactions.id),
   createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
 })
