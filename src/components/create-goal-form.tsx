@@ -3,7 +3,8 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
-import { createGoalAction, initialCreateGoalState } from "@/app/goals/actions";
+import { createGoalAction } from "@/app/goals/actions";
+import { initialCreateGoalState } from "@/app/goals/form-state";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
