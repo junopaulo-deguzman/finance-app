@@ -4,15 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { createGoal } from "@/db/queries";
 
-export type CreateGoalFormState = {
-  status: "idle" | "success" | "error";
-  message: string;
-};
-
-export const initialCreateGoalState: CreateGoalFormState = {
-  status: "idle",
-  message: "",
-};
+import type { CreateGoalFormState } from "@/app/goals/form-state";
 
 export async function createGoalAction(_: CreateGoalFormState, formData: FormData): Promise<CreateGoalFormState> {
   const name = String(formData.get("name") ?? "").trim();
