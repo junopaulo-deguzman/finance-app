@@ -9,6 +9,49 @@ export async function listTransactions() {
   return db.select().from(transactions).orderBy(desc(transactions.date));
 }
 
+type CreateTransactionInput = {
+  date: string;
+  category: string;
+  note?: string;
+  amount: number;
+  type: "income" | "expense" | "save";
+  goalId?: string;
+};
+
+export async function createTransaction(input: CreateTransactionInput) {
+  const db = getDb();
+  const now = new Date();
+  const transactionId = crypto.randomUUID();
+
+  await db.insert(transactions).values({
+    id: transactionId,
+    date: input.date,
+    category: input.category,
+    note: input.note ?? "",
+    amount: input.amount,
+    type: input.type,
+    createdAt: now,
+  });
+
+  if (input.type === "save" && input.goalId) {
+    await db.insert(goal_allocations).values({
+      id: crypto.randomUUID(),
+      goalId: input.goalId,
+      transactionId,
+      createdAt: now,
+    });
+  }
+
+  return {
+    id: transactionId,
+    date: input.date,
+    category: input.category,
+    note: input.note ?? "",
+    amount: input.amount,
+    type: input.type,
+  };
+}
+
 export async function listGoalsWithProgress() {
   const db = getDb();
 
