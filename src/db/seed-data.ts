@@ -1,11 +1,55 @@
-import type { Transaction } from "@/db/schema";
+import type { Account, Transaction } from "@/db/schema";
 
 const createdAt = new Date();
 
+export const seedAccounts: Account[] = [
+  {
+    id: "acct-1",
+    name: "Primary Checking",
+    provider: "Manual",
+    type: "checking",
+    currency: "PHP",
+    isArchived: false,
+    createdAt,
+    updatedAt: createdAt,
+  },
+  {
+    id: "acct-2",
+    name: "Savings",
+    provider: "Manual",
+    type: "savings",
+    currency: "PHP",
+    isArchived: false,
+    createdAt,
+    updatedAt: createdAt,
+  },
+];
+
 export const seedTransactions: Transaction[] = [
-  { id: "1", date: "2026-02-01", category: "Salary", note: "Main paycheck", amount: 6200, type: "income", createdAt },
-  { id: "2", date: "2026-02-03", category: "Mortgage", note: "Monthly payment", amount: 1850, type: "expense", createdAt },
-  { id: "3", date: "2026-02-08", category: "Groceries", note: "Weekly shopping", amount: 182.44, type: "expense", createdAt },
-  { id: "4", date: "2026-02-14", category: "Freelance", note: "Side project", amount: 740, type: "income", createdAt },
-  { id: "5", date: "2026-02-19", category: "Utilities", note: "Electric + water", amount: 210.98, type: "expense", createdAt },
+  {
+    id: "1",
+    date: "2026-02-01",
+    type: "income",
+    accountId: "acct-1",
+    toAccountId: null,
+    amount: 6200,
+    amountSigned: null,
+    note: "Main paycheck",
+    categoryId: "salary",
+    createdAt,
+    updatedAt: createdAt,
+  },
+  {
+    id: "2",
+    date: "2026-02-03",
+    type: "expense",
+    accountId: "acct-1",
+    toAccountId: null,
+    amount: 1850,
+    amountSigned: null,
+    note: "Monthly payment",
+    categoryId: "mortgage",
+    createdAt,
+    updatedAt: createdAt,
+  },
 ];
