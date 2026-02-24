@@ -1,19 +1,15 @@
 export type CreateTransactionPayload = {
   date: string;
-  category: string;
+  accountId: string;
+  toAccountId?: string;
   note: string;
   amount: number;
-  type: "income" | "expense" | "save";
-  goalId?: string;
+  type: "income" | "expense" | "transfer";
+  categoryId?: string;
 };
 
 export type TransactionDto = {
   id: string;
-  date: string;
-  category: string;
-  note: string;
-  amount: number;
-  type: "income" | "expense" | "save";
 };
 
 export async function createTransaction(payload: CreateTransactionPayload): Promise<TransactionDto> {
