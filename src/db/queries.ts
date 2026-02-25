@@ -43,6 +43,83 @@ export async function ensureDefaultAccount() {
   return account;
 }
 
+type UpsertAccountInput = {
+  name: string;
+  provider: string;
+  type: string;
+  currency: string;
+};
+
+const validAccountTypes = new Set(["checking", "savings", "credit", "cash", "investment", "other"]);
+
+function normalizeAccountInput(input: UpsertAccountInput) {
+  const name = input.name.trim();
+  const provider = input.provider.trim();
+  const currency = input.currency.trim().toUpperCase();
+  const type = input.type.trim();
+
+  if (!name) {
+    throw new Error("Account name is required.");
+  }
+
+  if (!provider) {
+    throw new Error("Account provider is required.");
+  }
+
+  if (!validAccountTypes.has(type)) {
+    throw new Error("Invalid account type.");
+  }
+
+  if (!currency || currency.length !== 3) {
+    throw new Error("Currency must be a 3-letter code.");
+  }
+
+  return { name, provider, currency, type: type as "checking" | "savings" | "credit" | "cash" | "investment" | "other" };
+}
+
+export async function createAccountRecord(input: UpsertAccountInput) {
+  const db = getDb();
+  const now = new Date();
+  const account = normalizeAccountInput(input);
+
+  await db.insert(accounts).values({
+    id: crypto.randomUUID(),
+    name: account.name,
+    provider: account.provider,
+    type: account.type,
+    currency: account.currency,
+    isArchived: false,
+    createdAt: now,
+    updatedAt: now,
+  });
+}
+
+export async function getAccountById(accountId: string) {
+  const db = getDb();
+  const result = await db.select().from(accounts).where(eq(accounts.id, accountId)).limit(1);
+  return result[0] ?? null;
+}
+
+export async function updateAccountDetails(accountId: string, input: UpsertAccountInput) {
+  const db = getDb();
+  const account = normalizeAccountInput(input);
+
+  const result = await db
+    .update(accounts)
+    .set({
+      name: account.name,
+      provider: account.provider,
+      type: account.type,
+      currency: account.currency,
+      updatedAt: new Date(),
+    })
+    .where(eq(accounts.id, accountId));
+
+  if (result.rowsAffected === 0) {
+    throw new Error("Account not found.");
+  }
+}
+
 export async function getAccountBalance(accountId: string, dateRange?: DateRange) {
   const db = getDb();
   const filters = [
