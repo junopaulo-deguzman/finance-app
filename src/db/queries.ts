@@ -1,5 +1,6 @@
 import { and, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 
+import { getHouseIdFromEnv } from "@/auth/env";
 import { getDb } from "@/db/client";
 import { accounts, goal_allocations, goals, transactions } from "@/db/schema";
 
@@ -13,15 +14,34 @@ type ListTransactionsFilters = DateRange & {
   limit?: number;
 };
 
+async function assertAccountInHouse(accountId: string, houseId: string) {
+  const db = getDb();
+  const result = await db
+    .select({ id: accounts.id })
+    .from(accounts)
+    .where(and(eq(accounts.id, accountId), eq(accounts.houseId, houseId)))
+    .limit(1);
+
+  if (!result[0]) {
+    throw new Error("Account not found.");
+  }
+}
+
 export async function listAccounts() {
   const db = getDb();
+  const houseId = getHouseIdFromEnv();
 
-  return db.select().from(accounts).where(eq(accounts.isArchived, false)).orderBy(accounts.name);
+  return db
+    .select()
+    .from(accounts)
+    .where(and(eq(accounts.houseId, houseId), eq(accounts.isArchived, false)))
+    .orderBy(accounts.name);
 }
 
 export async function ensureDefaultAccount() {
   const db = getDb();
-  const existing = await db.select().from(accounts).limit(1);
+  const houseId = getHouseIdFromEnv();
+  const existing = await db.select().from(accounts).where(eq(accounts.houseId, houseId)).limit(1);
 
   if (existing.length > 0) {
     return existing[0];
@@ -30,6 +50,7 @@ export async function ensureDefaultAccount() {
   const now = new Date();
   const account = {
     id: crypto.randomUUID(),
+    houseId,
     name: "Primary Checking",
     provider: "Manual",
     type: "checking" as const,
@@ -80,10 +101,12 @@ function normalizeAccountInput(input: UpsertAccountInput) {
 export async function createAccountRecord(input: UpsertAccountInput) {
   const db = getDb();
   const now = new Date();
+  const houseId = getHouseIdFromEnv();
   const account = normalizeAccountInput(input);
 
   await db.insert(accounts).values({
     id: crypto.randomUUID(),
+    houseId,
     name: account.name,
     provider: account.provider,
     type: account.type,
@@ -96,12 +119,18 @@ export async function createAccountRecord(input: UpsertAccountInput) {
 
 export async function getAccountById(accountId: string) {
   const db = getDb();
-  const result = await db.select().from(accounts).where(eq(accounts.id, accountId)).limit(1);
+  const houseId = getHouseIdFromEnv();
+  const result = await db
+    .select()
+    .from(accounts)
+    .where(and(eq(accounts.id, accountId), eq(accounts.houseId, houseId)))
+    .limit(1);
   return result[0] ?? null;
 }
 
 export async function updateAccountDetails(accountId: string, input: UpsertAccountInput) {
   const db = getDb();
+  const houseId = getHouseIdFromEnv();
   const account = normalizeAccountInput(input);
 
   const result = await db
@@ -113,7 +142,7 @@ export async function updateAccountDetails(accountId: string, input: UpsertAccou
       currency: account.currency,
       updatedAt: new Date(),
     })
-    .where(eq(accounts.id, accountId));
+    .where(and(eq(accounts.id, accountId), eq(accounts.houseId, houseId)));
 
   if (result.rowsAffected === 0) {
     throw new Error("Account not found.");
@@ -122,6 +151,9 @@ export async function updateAccountDetails(accountId: string, input: UpsertAccou
 
 export async function getAccountBalance(accountId: string, dateRange?: DateRange) {
   const db = getDb();
+  const houseId = getHouseIdFromEnv();
+  await assertAccountInHouse(accountId, houseId);
+
   const filters = [
     or(eq(transactions.accountId, accountId), eq(transactions.toAccountId, accountId)),
     dateRange?.from ? gte(transactions.date, dateRange.from) : undefined,
@@ -149,6 +181,9 @@ export async function getAccountBalance(accountId: string, dateRange?: DateRange
 
 export async function listTransactions(accountId: string, filters: ListTransactionsFilters = {}) {
   const db = getDb();
+  const houseId = getHouseIdFromEnv();
+  await assertAccountInHouse(accountId, houseId);
+
   const whereFilters = [
     or(eq(transactions.accountId, accountId), eq(transactions.toAccountId, accountId)),
     filters.from ? gte(transactions.date, filters.from) : undefined,
@@ -194,6 +229,9 @@ type CreateTransactionInput = {
 
 export async function createTransaction(input: CreateTransactionInput) {
   const db = getDb();
+  const houseId = getHouseIdFromEnv();
+  await assertAccountInHouse(input.accountId, houseId);
+
   const now = new Date();
   const transactionId = crypto.randomUUID();
 
@@ -222,6 +260,10 @@ export async function createTransfer(fromAccountId: string, toAccountId: string,
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error("Transfer amount must be greater than zero.");
   }
+
+  const houseId = getHouseIdFromEnv();
+  await assertAccountInHouse(fromAccountId, houseId);
+  await assertAccountInHouse(toAccountId, houseId);
 
   const db = getDb();
   const now = new Date();

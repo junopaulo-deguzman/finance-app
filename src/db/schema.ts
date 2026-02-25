@@ -5,6 +5,7 @@ export const accounts = sqliteTable(
   "accounts",
   {
     id: text("id").primaryKey(),
+    houseId: text("house_id").notNull(),
     name: text("name").notNull(),
     provider: text("provider").notNull().default("manual"),
     type: text("type", { enum: ["checking", "savings", "credit", "cash", "investment", "other"] }).notNull(),
@@ -13,7 +14,10 @@ export const accounts = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   },
-  (table) => [index("accounts_archived_idx").on(table.isArchived)],
+  (table) => [
+    index("accounts_house_idx").on(table.houseId),
+    index("accounts_archived_idx").on(table.isArchived),
+  ],
 );
 
 export const transactions = sqliteTable(
