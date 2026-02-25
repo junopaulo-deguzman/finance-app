@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import { createTransaction } from "@/api/transactions";
 
@@ -90,6 +91,9 @@ export default function FinanceDashboard({ initialRows, accounts, initialAccount
   return (
     <main className="container">
       <h1>Home Finance Tracker</h1>
+      <p>
+        <Link href="/accounts">Manage accounts</Link>
+      </p>
       <section className="kpis">
         <article>
           <h2>Account Balance</h2>
