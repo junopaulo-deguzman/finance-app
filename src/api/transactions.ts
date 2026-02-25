@@ -18,6 +18,7 @@ export async function createTransaction(payload: CreateTransactionPayload): Prom
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "same-origin",
     body: JSON.stringify(payload),
   });
 

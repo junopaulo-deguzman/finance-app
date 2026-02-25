@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getHouseIdFromEnv } from "@/auth/env";
+import { verifyJwtFromRequest } from "@/auth/jwt";
 import { createTransaction, createTransfer } from "@/db/queries";
 
 type CreateTransactionRequestBody = {
@@ -13,6 +15,17 @@ type CreateTransactionRequestBody = {
 };
 
 export async function POST(request: Request) {
+  try {
+    const payload = await verifyJwtFromRequest(request);
+    const houseId = getHouseIdFromEnv();
+
+    if (payload.houseId && payload.houseId !== houseId) {
+      return NextResponse.json({ error: "Token houseId does not match configured house." }, { status: 403 });
+    }
+  } catch {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
   let body: CreateTransactionRequestBody;
 
   try {

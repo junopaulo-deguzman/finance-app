@@ -1,13 +1,15 @@
 import { loadEnvConfig } from "@next/env";
 
+import { getHouseIdFromEnv } from "@/auth/env";
 import { getDb } from "@/db/client";
-import { seedAccounts, seedTransactions } from "@/db/seed-data";
+import { buildSeedAccounts, seedTransactions } from "@/db/seed-data";
 import { accounts, transactions } from "@/db/schema";
 
 loadEnvConfig(process.cwd());
 
 async function seed() {
   const db = getDb();
+  const seedAccounts = buildSeedAccounts(getHouseIdFromEnv());
 
   await db.delete(transactions);
   await db.delete(accounts);
