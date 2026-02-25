@@ -5,14 +5,15 @@ export default async function Home() {
   const defaultAccount = await ensureDefaultAccount();
   const accounts = await listAccounts();
   const rows = await listTransactions(defaultAccount.id).catch(() => []);
-  const balance = await getAccountBalance(defaultAccount.id).catch(() => 0);
+  const accountBalances = await Promise.all(accounts.map((account) => getAccountBalance(account.id).catch(() => 0)));
+  const totalBalance = accountBalances.reduce((sum, value) => sum + value, 0);
 
   return (
     <FinanceDashboard
       initialRows={rows}
       accounts={accounts}
       initialAccountId={defaultAccount.id}
-      initialBalance={balance}
+      initialTotalBalance={totalBalance}
     />
   );
 }

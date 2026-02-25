@@ -27,7 +27,7 @@ type FinanceDashboardProps = {
   initialRows: Row[];
   accounts: Account[];
   initialAccountId: string;
-  initialBalance: number;
+  initialTotalBalance: number;
 };
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -35,9 +35,9 @@ const currency = new Intl.NumberFormat("en-US", {
   currency: "PHP",
 });
 
-export default function FinanceDashboard({ initialRows, accounts, initialAccountId, initialBalance }: FinanceDashboardProps) {
+export default function FinanceDashboard({ initialRows, accounts, initialAccountId, initialTotalBalance }: FinanceDashboardProps) {
   const [rows, setRows] = useState<Row[]>(initialRows);
-  const [balance, setBalance] = useState(initialBalance);
+  const [totalBalance, setTotalBalance] = useState(initialTotalBalance);
   const [form, setForm] = useState({
     accountId: initialAccountId,
     toAccountId: "",
@@ -79,9 +79,8 @@ export default function FinanceDashboard({ initialRows, accounts, initialAccount
         },
         ...prev,
       ]);
-      if (form.type === "income") setBalance((v) => v + form.amount);
-      if (form.type === "expense") setBalance((v) => v - form.amount);
-      if (form.type === "transfer") setBalance((v) => v - form.amount);
+      if (form.type === "income") setTotalBalance((v) => v + form.amount);
+      if (form.type === "expense") setTotalBalance((v) => v - form.amount);
       setSubmitError("");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Could not save transaction.");
@@ -96,8 +95,8 @@ export default function FinanceDashboard({ initialRows, accounts, initialAccount
       </p>
       <section className="kpis">
         <article>
-          <h2>Account Balance</h2>
-          <p className={balance >= 0 ? "income" : "expense"}>{currency.format(balance)}</p>
+          <h2>Total Balance</h2>
+          <p className={totalBalance >= 0 ? "income" : "expense"}>{currency.format(totalBalance)}</p>
         </article>
       </section>
 
