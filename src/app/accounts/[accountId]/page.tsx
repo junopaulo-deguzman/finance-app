@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { updateAccountAction } from "@/app/accounts/actions";
-import { getAccountBalance, getAccountById, listTransactions } from "@/db/queries";
+import TransactionForm from "@/components/transaction-form";
+import { getAccountBalance, getAccountById, listAccounts, listTransactions } from "@/db/queries";
 import { ACCOUNT_TYPES } from "@/lib/constants";
 
 export default async function AccountPage({ params }: { params: Promise<{ accountId: string }> }) {
@@ -13,8 +14,11 @@ export default async function AccountPage({ params }: { params: Promise<{ accoun
     notFound();
   }
 
-  const balance = await getAccountBalance(accountId);
-  const rows = await listTransactions(accountId, { limit: 20 });
+  const [balance, rows, accounts] = await Promise.all([
+    getAccountBalance(accountId),
+    listTransactions(accountId, { limit: 20 }),
+    listAccounts(),
+  ]);
 
   return (
     <main className="container">
@@ -54,6 +58,11 @@ export default async function AccountPage({ params }: { params: Promise<{ accoun
             <input name="currency" defaultValue={account.currency} maxLength={3} required />
             <button type="submit">Save changes</button>
           </form>
+        </article>
+
+        <article>
+          <h2>Add Transaction</h2>
+          <TransactionForm accounts={accounts} accountId={account.id} refreshOnSuccess />
         </article>
 
         <article>
