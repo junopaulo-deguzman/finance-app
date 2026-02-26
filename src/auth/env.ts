@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 const defaultHouseId = process.env.HOUSE_ID?.trim();
 
 export function getHouseIdFromEnv() {
