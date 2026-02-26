@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 
 import { updateAccountAction } from "@/app/accounts/actions";
 import { getAccountBalance, getAccountById, listTransactions } from "@/db/queries";
-
-const accountTypes = ["checking", "savings", "credit", "cash", "investment", "other"];
+import { ACCOUNT_TYPES } from "@/lib/constants";
 
 export default async function AccountPage({ params }: { params: Promise<{ accountId: string }> }) {
   const { accountId } = await params;
@@ -46,7 +45,7 @@ export default async function AccountPage({ params }: { params: Promise<{ accoun
             <input name="name" defaultValue={account.name} required />
             <input name="provider" defaultValue={account.provider} required />
             <select name="type" defaultValue={account.type} required>
-              {accountTypes.map((type) => (
+              {Object.values(ACCOUNT_TYPES).map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
