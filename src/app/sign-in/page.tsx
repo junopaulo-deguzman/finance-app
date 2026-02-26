@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Box, Button, Card, Heading, Input, Stack, Text } from "@chakra-ui/react";
 
 import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/auth/jwt";
 
@@ -21,19 +22,23 @@ export default async function SignInPage({ searchParams }: { searchParams: Searc
   }
 
   return (
-    <main className="container">
-      <section className="grid" style={{ maxWidth: 480, margin: "0 auto" }}>
-        <article>
-          <h1>Sign in</h1>
-          <p className="subtitle">Enter your credentials to access your finance dashboard.</p>
-          <form action="/api/sign-in" method="post" className="form-grid">
-            <input name="username" placeholder="Username" autoComplete="username" required />
-            <input name="password" type="password" placeholder="Password" autoComplete="current-password" required />
-            <button type="submit">Sign in</button>
+    <Box maxW="480px" mx="auto" px={4} py={12}>
+      <Card.Root>
+        <Card.Header>
+          <Heading size="lg">Sign in</Heading>
+          <Text color="gray.500">Enter your credentials to access your finance dashboard.</Text>
+        </Card.Header>
+        <Card.Body>
+          <form action="/api/sign-in" method="post">
+            <Stack gap={3}>
+              <Input name="username" placeholder="Username" autoComplete="username" required />
+              <Input name="password" type="password" placeholder="Password" autoComplete="current-password" required />
+              <Button type="submit">Sign in</Button>
+            </Stack>
           </form>
-          {error ? <p className="expense">Invalid credentials.</p> : null}
-        </article>
-      </section>
-    </main>
+          {error ? <Text color="red.600" mt={3}>Invalid credentials.</Text> : null}
+        </Card.Body>
+      </Card.Root>
+    </Box>
   );
 }

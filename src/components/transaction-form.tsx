@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Button, Field, Input, NativeSelect, Stack, Text } from "@chakra-ui/react";
 
 import { createTransaction } from "@/api/transactions";
 
@@ -41,8 +42,9 @@ export default function TransactionForm({ accounts, accountId, refreshOnSuccess 
   });
   const [submitError, setSubmitError] = useState("");
 
+  async function addTransaction(event: FormEvent) {
+    event.preventDefault();
 
-  async function addTransaction() {
     if (!form.date || form.amount <= 0 || !form.accountId) {
       setSubmitError("Date, account, and amount are required.");
       return;
@@ -85,45 +87,84 @@ export default function TransactionForm({ accounts, accountId, refreshOnSuccess 
   }
 
   return (
-    <div className="form-grid">
-      {!accountId ? (
-        <select value={form.accountId} onChange={(event) => setForm((previous) => ({ ...previous, accountId: event.target.value }))}>
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name}
-            </option>
-          ))}
-        </select>
-      ) : null}
-      <input type="date" value={form.date} onChange={(event) => setForm((previous) => ({ ...previous, date: event.target.value }))} />
-      <input
-        type="number"
-        min="0"
-        step="0.01"
-        value={form.amount || ""}
-        onChange={(event) => setForm((previous) => ({ ...previous, amount: Number(event.target.value) }))}
-      />
-      <input placeholder="Category" value={form.categoryId} onChange={(event) => setForm((previous) => ({ ...previous, categoryId: event.target.value }))} />
-      <input placeholder="Note" value={form.note} onChange={(event) => setForm((previous) => ({ ...previous, note: event.target.value }))} />
-      <select value={form.type} onChange={(event) => setForm((previous) => ({ ...previous, type: event.target.value as TransactionType }))}>
-        <option value="expense">Expense</option>
-        <option value="income">Income</option>
-        <option value="transfer">Transfer</option>
-      </select>
-      {form.type === "transfer" ? (
-        <select value={form.toAccountId} onChange={(event) => setForm((previous) => ({ ...previous, toAccountId: event.target.value }))}>
-          <option value="">Destination account</option>
-          {accounts
-            .filter((account) => account.id !== form.accountId)
-            .map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-        </select>
-      ) : null}
-      <button onClick={addTransaction}>Add</button>
-      {submitError ? <p className="form-feedback form-feedback-error">{submitError}</p> : null}
-    </div>
+    <form onSubmit={addTransaction}>
+      <Stack gap={3}>
+        {!accountId ? (
+          <Field.Root>
+            <Field.Label>Account</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field value={form.accountId} onChange={(event) => setForm((previous) => ({ ...previous, accountId: event.target.value }))}>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                  </option>
+                ))}
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+        ) : null}
+
+        <Field.Root>
+          <Field.Label>Date</Field.Label>
+          <Input type="date" value={form.date} onChange={(event) => setForm((previous) => ({ ...previous, date: event.target.value }))} />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Amount</Field.Label>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.amount || ""}
+            onChange={(event) => setForm((previous) => ({ ...previous, amount: Number(event.target.value) }))}
+          />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Category</Field.Label>
+          <Input placeholder="Category" value={form.categoryId} onChange={(event) => setForm((previous) => ({ ...previous, categoryId: event.target.value }))} />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Note</Field.Label>
+          <Input placeholder="Note" value={form.note} onChange={(event) => setForm((previous) => ({ ...previous, note: event.target.value }))} />
+        </Field.Root>
+
+        <Field.Root>
+          <Field.Label>Type</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field value={form.type} onChange={(event) => setForm((previous) => ({ ...previous, type: event.target.value as TransactionType }))}>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="transfer">Transfer</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        {form.type === "transfer" ? (
+          <Field.Root>
+            <Field.Label>Destination account</Field.Label>
+            <NativeSelect.Root>
+              <NativeSelect.Field value={form.toAccountId} onChange={(event) => setForm((previous) => ({ ...previous, toAccountId: event.target.value }))}>
+                <option value="">Destination account</option>
+                {accounts
+                  .filter((account) => account.id !== form.accountId)
+                  .map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))}
+              </NativeSelect.Field>
+              <NativeSelect.Indicator />
+            </NativeSelect.Root>
+          </Field.Root>
+        ) : null}
+
+        <Button type="submit">Add</Button>
+        {submitError ? <Text color="red.600">{submitError}</Text> : null}
+      </Stack>
+    </form>
   );
 }
